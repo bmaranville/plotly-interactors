@@ -1,0 +1,113 @@
+<head>
+  <!-- Plotly.js -->
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+
+<body>
+  <div id="myDiv" style:width: 100%><!-- Plotly chart will be drawn inside this DIV --></div>
+  <script type="module">
+    import { angleSliceInteractor } from './src/angle-slice-interactor.js';
+  
+    const state = {
+      name: "angle_slice",
+      cx: 2.5,
+      cy: 5.0,
+      angle_offset: -Math.PI/4.0,
+      angle_range: Math.PI/10.0,
+      point_radius: 10,
+      color1: 'green',
+      color2: 'red',
+    };
+    
+    const state2 = {
+      name: "angle_slice",
+      cx: 35,
+      cy: 53,
+      angle_offset: Math.PI/4.0,
+      angle_range: Math.PI/10.0,
+      point_radius: 6,
+      color1: 'red',
+      color2: 'blue',
+    };
+    
+    const myPlot = document.getElementById('myDiv');
+    const d3 = Plotly.d3;
+    
+    var trace1 = {
+      x: [1, 2, 3],
+      y: [4, 5, 6],
+      type: 'scatter'
+    };
+
+    var trace2 = {
+      x: [20, 30, 40],
+      y: [50, 60, 70],
+      xaxis: 'x2',
+      yaxis: 'y2',
+      type: 'scatter',
+      template: 'simply_white',
+    };
+
+    var data = [trace1, trace2];
+    const axis_layout = {showline: true, mirror: true};
+
+    var layout = {
+      grid: {rows: 1, columns: 2, pattern: 'independent'},
+      xaxis: {showline: true, mirror: true},
+      yaxis: {showline: true, mirror: true},
+      xaxis2: {showline: true, mirror: true},
+      yaxis2: {showline: true, mirror: true},
+    };
+    
+    const config = {
+      scrollZoom: true,
+      modeBarButtonsToAdd: [
+        'drawline',
+        'drawopenpath',
+        'drawclosedpath',
+        'drawcircle',
+        'drawrect',
+        'eraseshape'
+      ],
+    };
+    // var slice_interactor;
+    // var slice_interactor2;
+    const plot =  await Plotly.plot('myDiv', data, layout, config);
+    const slice_interactor = angleSliceInteractor(state, plot, d3, 'xy');
+    const slice_interactor2 = angleSliceInteractor(state2, plot, d3, 'x2y2');
+    slice_interactor2.dispatch.on('update', (s) => { console.log(s.cx) });
+
+
+    // const [slice_interactor, slice_interactor2] = await Plotly.plot('myDiv', data, layout, config).then((p) => {
+    //   const slice_interactor = angleSliceInteractor(state, p, d3, 'xy');
+    //   const slice_interactor2 = angleSliceInteractor(state2, p, d3, 'x2y2');
+    //   slice_interactor2.dispatch.on('update', (s) => { console.log(s.cx) });
+    //   return [slice_interactor, slice_interactor2];
+    // });
+    
+
+    // console.log({slice_interactor, slice_interactor2});
+    myPlot.on('plotly_afterplot', function (a,b,c,d) {
+      console.log(a,b,c,d, this);
+    });
+    myPlot.on('plotly_click', function(a,b,c,d) {
+      console.log('click:', a, b, c, d);
+    });
+    myPlot.on('plotly_relayout', function(ev) {
+      console.log('relayout: ', ev);
+    });
+    myPlot.on('plotly_relayouting', function(ev) {
+      //console.log('relayouting', ev);
+    });
+    globalThis.myPlot = myPlot;
+    globalThis.d3 = d3;
+
+  </script>
+  <style>
+    .centerline {
+      stroke: orange;
+      stroke-dasharray: 10,2;
+    }
+  </style>
+  
+</body>

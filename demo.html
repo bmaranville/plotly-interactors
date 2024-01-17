@@ -7,6 +7,7 @@
   <div id="myDiv" style:width: 100%><!-- Plotly chart will be drawn inside this DIV --></div>
   <script type="module">
     import { angleSliceInteractor } from './src/angle-slice-interactor.js';
+    import { xSliceInteractor } from './src/x-slice-interactor.js';
   
     const state = {
       name: "angle_slice",
@@ -29,6 +30,16 @@
       color1: 'red',
       color2: 'blue',
     };
+
+    const x_slice_state = {
+      type: "xslice",
+      name: "xslice",
+      show_lines: true,
+      color1: "blue",
+      color2: "green",
+      x1: 1.2,
+      x2: 2.5,
+    }
     
     const myPlot = document.getElementById('myDiv');
     const d3 = Plotly.d3;
@@ -73,6 +84,7 @@
     // var slice_interactor;
     // var slice_interactor2;
     const plot =  await Plotly.plot('myDiv', data, layout, config);
+    const x_slice_interactor = xSliceInteractor(x_slice_state, plot, d3, 'xy');
     const slice_interactor = angleSliceInteractor(state, plot, d3, 'xy');
     const slice_interactor2 = angleSliceInteractor(state2, plot, d3, 'x2y2');
     slice_interactor2.dispatch.on('update', (s) => { console.log(s.cx) });

@@ -5,13 +5,14 @@
 
 <body>
   <div id="myDiv" style:width: 100%><!-- Plotly chart will be drawn inside this DIV --></div>
+  <div id="test"><button id="replot">Randomize Plot 1</button></div>
   <script type="module">
     import { angleSliceInteractor } from './src/angle-slice-interactor.js';
     import { xSliceInteractor } from './src/x-slice-interactor.js';
   
     const state = {
       name: "angle_slice",
-      cx: 2.5,
+      cx: 2.25,
       cy: 5.0,
       angle_offset: -Math.PI/4.0,
       angle_range: Math.PI/10.0,
@@ -24,6 +25,7 @@
       name: "angle_slice",
       cx: 35,
       cy: 53,
+      mirror: false,
       angle_offset: Math.PI/4.0,
       angle_range: Math.PI/10.0,
       point_radius: 6,
@@ -71,6 +73,7 @@
     };
     
     const config = {
+      responsive: true,
       scrollZoom: true,
       modeBarButtonsToAdd: [
         'drawline',
@@ -106,13 +109,24 @@
       console.log('click:', a, b, c, d);
     });
     myPlot.on('plotly_relayout', function(ev) {
-      console.log('relayout: ', ev);
+      // console.log('relayout: ', ev);
+    });
+    myPlot.on('plotly_redraw', function(ev) {
+      console.log('redraw: ', ev);
     });
     myPlot.on('plotly_relayouting', function(ev) {
-      //console.log('relayouting', ev);
+      // console.log('relayouting', ev);
+      // window.relayouting = ev;
     });
     globalThis.myPlot = myPlot;
     globalThis.d3 = d3;
+
+    const replot_button = document.getElementById("replot");
+    replot_button.onclick = () => {
+      data[0].y = Array.from({length: 3}).map(() => Math.random() * 5.0);
+      Plotly.react("myDiv", data, layout);
+
+    }
 
   </script>
   <style>

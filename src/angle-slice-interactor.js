@@ -1,41 +1,74 @@
 export default angleSliceInteractor;
 
+const default_state = {
+  cx: 1,
+  cy: 1,
+  mirror: true,
+  angle_offset: Math.PI/4.0,
+  angle_range: Math.PI/10.0,
+  fixed: false,
+  point_radius: 6,
+  color1: 'red',
+  color2: 'blue',
+  show_lines: true,
+  show_center: true,
+};
+
 export function angleSliceInteractor(state, plotlyPlot, d3, plot='xy') {
-  // dispatch is the d3 event dispatcher: should have event "update" register
+  // Set defaults:
+  Object.entries(default_state).forEach(([key, value]) => {
+    if (!(key in state)) {
+      state[key] = value;
+    }
+  });
+  const { name } = state;
   // state: {cx: ..., cy: ..., angle_offset: ..., angle_range: ...}
   // angle is in pixel coords
-  var name = state.name;
-  var point_radius = ( state.point_radius == null ) ? 5 : state.point_radius;
+
+  // dispatch is the d3 event dispatcher: should have event "update" register
   var dispatch = d3.dispatch("update");
   const subplot = plotlyPlot._fullLayout._plots[plot];
-  const plotdiv = subplot.plot;
+  const clipId = subplot.clipId.replace(/plot$/, '');
+  const shapelayer = plotlyPlot._fullLayout._shapeUpperLayer;
+  const layer_above = d3.select(shapelayer[0][0].parentNode);
+  // create interactor layer, if not exists:
+  layer_above.selectAll("g.interactorlayer")
+    .data(["interactors"])
+    .enter().append("g")
+    .classed("interactorlayer", true);
+  const interactorlayer = layer_above.selectAll("g.interactorlayer");
   let x = subplot.xaxis;
   let y = subplot.yaxis;
+  function x_c2p(xc) {
+    return x.c2p(xc) + x._offset;
+  }
+  function y_c2p(yc) {
+    return y.c2p(yc) + y._offset;
+  }
   
   // TODO: need to check for linear scale somehow - doesn't work otherwise
 
-  var show_points = (state.show_points == null) ? true : state.show_points;
-  var show_lines = (state.show_lines == null) ? true : state.show_lines;
-  var show_center = (state.show_center == null) ? true : state.show_center;
-  var fixed = (state.fixed == null) ? false : state.fixed;
-  var cursor = (fixed) ? "auto" : "move";
-  
-  var angle_to_path = function(cx, cy, angle) {
-    var yd = y.range.map(y.c2p),
-        xd = x.range.map(x.c2p),
-        rm = Math.sqrt(Math.pow(xd[1] - xd[0], 2) + Math.pow(yd[1] - yd[0], 2));        
 
-    var s = Math.sin(angle),
+  function get_cursor() {
+    return (state.fixed) ? "auto" : "move";
+  }
+  
+  function angle_to_path(cx, cy, angle) {
+    const yd = y.range.map(y_c2p);
+    const xd = x.range.map(x_c2p);
+    const rm = Math.sqrt(Math.pow(xd[1] - xd[0], 2) + Math.pow(yd[1] - yd[0], 2));        
+
+    const s = Math.sin(angle),
         c = Math.cos(angle),
-        cxp = x.c2p(cx),
-        cyp = y.c2p(cy);
+        cxp = x_c2p(cx),
+        cyp = y_c2p(cy);
         
-    var y1 = cyp - rm * s,
+    const y1 = cyp - rm * s,
         y2 = cyp + rm * s,
         x1 = cxp + rm * c,
         x2 = cxp - rm * c;
         
-    var pathstring = ""; 
+    let pathstring = ""; 
     // start in the center and draw to the edge
     pathstring += "M" + cxp.toFixed();
     pathstring += "," + cyp.toFixed();
@@ -56,7 +89,7 @@ export function angleSliceInteractor(state, plotlyPlot, d3, plot='xy') {
     // boundaries and center lines
     
     // calculate angles of graph corners
-    if (show_lines) {
+    if (state.show_lines) {
       var centerline = angle_to_path(state.cx, state.cy, state.angle_offset), 
           upperline = angle_to_path(state.cx, state.cy, state.angle_offset + state.angle_range/2.0), 
           lowerline = angle_to_path(state.cx, state.cy, state.angle_offset - state.angle_range/2.0);
@@ -82,7 +115,7 @@ export function angleSliceInteractor(state, plotlyPlot, d3, plot='xy') {
   }
   
   var state_to_center = function(state) {
-    if (show_center) {
+    if (state.show_center) {
       return [
         [state.cx, state.cy],
       ]
@@ -103,12 +136,13 @@ export function angleSliceInteractor(state, plotlyPlot, d3, plot='xy') {
   function interactor(selection, x_offset=0, y_offset=0) {
     var group = selection.append("g")
       .classed("interactors interactor-" + name, true)
-      .style("cursor", cursor)
+      .style("cursor", get_cursor())
       .style("pointer-events", "all")
       .attr("transform", "translate(" + x_offset + "," + y_offset + ")");  
     var lines_group = group.append("g")
           .attr("class", "lines_group")
           .style("fill", "none")
+          .attr("vector-effect", "non-scaling-stroke")
           .style("stroke", state.color2)
           .style("stroke-width", "4px");
           
@@ -116,9 +150,11 @@ export function angleSliceInteractor(state, plotlyPlot, d3, plot='xy') {
       .data(state_to_paths(state))
         .enter().append("path")
         .attr("class", function(d) {return d['classname']})
+        .attr("vector-effect", "non-scaling-stroke")
         .classed("lines", true)
-        .attr("d", function(d) {return d['path']})    
-    if (!fixed) {
+        .attr("d", function(d) {return d['path']})
+        .attr("clip-path", `url('#${clipId}')`)
+    if (!state.fixed) {
       lines.call(drag_lines);
       lines
         
@@ -131,58 +167,29 @@ export function angleSliceInteractor(state, plotlyPlot, d3, plot='xy') {
       .data(state_to_center(state))
         .enter().append("circle")
         .classed("center", true)
-        .attr("r", point_radius)
-        .attr("cx", function(d) {return x.c2p(d[0])})
-        .attr("cy", function(d) {return y.c2p(d[1])})
-    if (!fixed) {
+        .attr("r", state.point_radius)
+        .attr("cx", function(d) {return x_c2p(d[0])})
+        .attr("cy", function(d) {return y_c2p(d[1])})
+        .attr("clip-path", `url('#${clipId}')`)
+    if (!state.fixed) {
       center_group.call(drag_center);
-      console.log('drag center');
     } 
 
     interactor.update = function(preventPropagation) {
       group.select('.center')
-        .attr("cx", x.c2p(state.cx))
-        .attr("cy", y.c2p(state.cy));
+        .attr("cx", x_c2p(state.cx))
+        .attr("cy", y_c2p(state.cy));
       
-      group.selectAll('.lines')
+      lines_group.selectAll('.lines')
         .data(state_to_paths(state))
         .attr("d", function(d) {return d['path']})
-        
-      group.selectAll('.edge').data(state_to_paths(state))
-        .attr("cx", function(d) {return x.c2p(d['cx'])})
-        .attr("cy", function(d) {return y.c2p(d['cy'])})
-        .attr("rx", function(d) {return Math.abs(x.c2p(d['rx'] + d['cx']) - x.c2p(d['cx']))})
-        .attr("ry", function(d) {return Math.abs(y.c2p(d['ry'] + d['cy']) - y.c2p(d['cy']))});
-        
+
       // fire!
       if (!preventPropagation) {
         dispatch.update(state);
       }
     }
     
-  }
-  
-  function relayout() {
-    x = subplot.xaxis;
-    y = subplot.yaxis;
-    interactor.update();
-  }
-  
-  function dragmove_corner(d) {
-    var new_x = x.p2c(d3.event.x),
-        new_y = y.p2c(d3.event.y);
-    var vertex = parseInt(d3.select(this).attr("vertex"));  
-    // enforce relationship between corners:
-    switch (vertex) {
-      case 0:
-        state.rx = new_x - state.cx;
-        break
-      case 1:
-        state.ry = new_y - state.cy;
-        break
-      default:
-    }
-    interactor.update();
   }
   
   function dragmove_center() {
@@ -193,7 +200,7 @@ export function angleSliceInteractor(state, plotlyPlot, d3, plot='xy') {
   
   
   function dragmove_lines() {
-    var new_angle = Math.atan2(y.c2p(state.cy) - d3.event.y, d3.event.x - x.c2p(state.cx));
+    var new_angle = Math.atan2(y_c2p(state.cy) - d3.event.y, d3.event.x - x_c2p(state.cx));
     if (d3.select(this).classed("centerline")) {
       state.angle_offset = new_angle;
     }
@@ -218,9 +225,16 @@ export function angleSliceInteractor(state, plotlyPlot, d3, plot='xy') {
     return interactor;
   };
   
-  interactor(plotdiv);
+  function relayout() {
+    x = subplot.xaxis;
+    y = subplot.yaxis;
+    interactor.update(true);
+  }
+  
+  interactor(interactorlayer);
   plotlyPlot.on('plotly_relayout', relayout);
   plotlyPlot.on('plotly_afterplot', relayout);
+  plotlyPlot.on('plotly_relayouting', relayout);
    
   interactor.state = state;
   interactor.dispatch = dispatch;

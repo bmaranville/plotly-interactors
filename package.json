@@ -1,0 +1,23 @@
+{
+  "name": "plotly-interactors",
+  "version": "1.0.0",
+  "description": "interactive elements in data space on plotly plots",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bmaranville/plotly-interactors.git"
+  },
+  "keywords": [
+    "plotly",
+    "interactor"
+  ],
+  "author": "Brian Maranville",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bmaranville/plotly-interactors/issues"
+  },
+  "homepage": "https://github.com/bmaranville/plotly-interactors#readme"
+}

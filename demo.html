@@ -18,6 +18,7 @@
   <script type="module">
     import { angleSliceInteractor } from './src/angle-slice-interactor.js';
     import { xSliceInteractor } from './src/x-slice-interactor.js';
+    import { ellipseInteractor } from './src/ellipse-interactor.js';
     import Plotly from 'plotly.js';
 
     const state = {
@@ -52,6 +53,22 @@
       x1: 1.2,
       x2: 2.5,
     }
+
+    const ellipse_state = { 
+      type: 'Ellipse', 
+      name: 'ellipse_1',
+      color1: '#00ffff',
+      color2: '#00ffff',
+      fill: "yellow",
+      show_center: true,
+      show_points: true,
+      show: false,
+      cx: 30, 
+      cy: 55,
+      rx: 5,
+      ry: 7,
+    }
+
 
     const myPlot = document.getElementById('myDiv');
 
@@ -108,7 +125,8 @@
     const x_slice_interactor = xSliceInteractor(x_slice_state, plot, 'xy');
     const slice_interactor = angleSliceInteractor(state, plot, 'xy');
     const slice_interactor2 = angleSliceInteractor(state2, plot, 'x2y2');
-    slice_interactor2.dispatch.on('update', (s) => { console.log(s.cx) });
+    const ellipse_interactor = ellipseInteractor(ellipse_state, plot, 'x2y2');
+    slice_interactor2.dispatch.on('update', (s) => { console.log(s.cx, state2.cx) });
 
     const added_ranges = [];
 

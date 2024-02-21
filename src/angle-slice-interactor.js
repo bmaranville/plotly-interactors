@@ -1,3 +1,7 @@
+import { dispatch as d3_dispatch } from 'd3-dispatch';
+import { select as d3_select } from 'd3-selection';
+import { drag as d3_drag } from 'd3-drag';
+
 export default angleSliceInteractor;
 
 const default_state = {
@@ -14,7 +18,7 @@ const default_state = {
   show_center: true,
 };
 
-export function angleSliceInteractor(state, plotlyPlot, d3, plot='xy') {
+export function angleSliceInteractor(state, plotlyPlot, plot='xy') {
   // Set defaults:
   Object.entries(default_state).forEach(([key, value]) => {
     if (!(key in state)) {
@@ -26,11 +30,11 @@ export function angleSliceInteractor(state, plotlyPlot, d3, plot='xy') {
   // angle is in pixel coords
 
   // dispatch is the d3 event dispatcher: should have event "update" register
-  var dispatch = d3.dispatch("update");
+  var dispatch = d3_dispatch("update");
   const subplot = plotlyPlot._fullLayout._plots[plot];
   const clipId = subplot.clipId.replace(/plot$/, '');
   const shapelayer = plotlyPlot._fullLayout._shapeUpperLayer;
-  const layer_above = d3.select(shapelayer[0][0].parentNode);
+  const layer_above = d3_select(shapelayer.node().parentNode);
   // create interactor layer, if not exists:
   layer_above.selectAll("g.interactorlayer")
     .data(["interactors"])
@@ -125,13 +129,13 @@ export function angleSliceInteractor(state, plotlyPlot, d3, plot='xy') {
     }
   }
   
-  var drag_center = d3.behavior.drag()
-    .on("dragstart", function(ev) { d3.event.sourceEvent.stopPropagation(); })
+  var drag_center = d3_drag()
+    .on("start", function(ev) { ev.sourceEvent.stopPropagation(); })
     .on("drag", dragmove_center)
 
-  var drag_lines = d3.behavior.drag()
+  var drag_lines = d3_drag()
     .on("drag", dragmove_lines)
-    .on("dragstart", function(ev) { d3.event.sourceEvent.stopPropagation(); });
+    .on("start", function(ev) { ev.sourceEvent.stopPropagation(); });
 
   function interactor(selection, x_offset=0, y_offset=0) {
     var group = selection.append("g")
@@ -186,28 +190,28 @@ export function angleSliceInteractor(state, plotlyPlot, d3, plot='xy') {
 
       // fire!
       if (!preventPropagation) {
-        dispatch.update(state);
+        dispatch.call("update", this, state);
       }
     }
     
   }
   
-  function dragmove_center() {
-    state.cx = x.p2c(x.c2p(state.cx) + d3.event.dx);
-    state.cy = y.p2c(y.c2p(state.cy) + d3.event.dy);
+  function dragmove_center(ev) {
+    state.cx = x.p2c(x.c2p(state.cx) + ev.dx);
+    state.cy = y.p2c(y.c2p(state.cy) + ev.dy);
     interactor.update();
   }
   
   
-  function dragmove_lines() {
-    var new_angle = Math.atan2(y_c2p(state.cy) - d3.event.y, d3.event.x - x_c2p(state.cx));
-    if (d3.select(this).classed("centerline")) {
+  function dragmove_lines(ev) {
+    var new_angle = Math.atan2(y_c2p(state.cy) - ev.y, ev.x - x_c2p(state.cx));
+    if (d3_select(this).classed("centerline")) {
       state.angle_offset = new_angle;
     }
-    else if (d3.select(this).classed("upperline")) {
+    else if (d3_select(this).classed("upperline")) {
       state.angle_range = 2.0 * (new_angle - state.angle_offset);
     }
-    else if (d3.select(this).classed("lowerline")) {
+    else if (d3_select(this).classed("lowerline")) {
       state.angle_range = -2.0 * (new_angle - state.angle_offset);
     }
     interactor.update();

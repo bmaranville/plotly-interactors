@@ -1,3 +1,7 @@
+import { dispatch as d3_dispatch } from 'd3-dispatch';
+import { select as d3_select } from 'd3-selection';
+import { drag as d3_drag } from 'd3-drag';
+
 export default xSliceInteractor;
 
 const default_state = {
@@ -9,7 +13,7 @@ const default_state = {
   fixed: false
 };
 
-export function xSliceInteractor(state, plotlyPlot, d3, plot='xy') {
+export function xSliceInteractor(state, plotlyPlot, plot='xy') {
   // Set defaults:
   Object.entries(default_state).forEach(([key, value]) => {
     if (!(key in state)) {
@@ -19,12 +23,12 @@ export function xSliceInteractor(state, plotlyPlot, d3, plot='xy') {
   const { name } = state;
 
   // dispatch is the d3 event dispatcher: should have event "update" register
-  const dispatch = d3.dispatch("update");
+  const dispatch = d3_dispatch("update");
   const subplot = plotlyPlot._fullLayout._plots[plot];
   const clipId = subplot.clipId.replace(/plot$/, '');
   const shapelayer = plotlyPlot._fullLayout._shapeUpperLayer;
   // create interactor layer, if not exists:
-  const layer_above = d3.select(shapelayer[0][0].parentNode);
+  const layer_above = d3_select(shapelayer[0][0].parentNode);
   // create interactor layer, if not exists:
   layer_above.selectAll("g.interactorlayer")
     .data(["interactors"])
@@ -80,9 +84,9 @@ export function xSliceInteractor(state, plotlyPlot, d3, plot='xy') {
     }
   }
     
-  const drag_lines = d3.behavior.drag()
+  const drag_lines = d3_drag()
     .on("drag", dragmove_lines)
-    .on("dragstart", function() { d3.event.sourceEvent.stopPropagation() });
+    .on("start", function(ev) { ev.sourceEvent.stopPropagation() });
 
   function interactor(selection) {
     const group = selection.append("g")
@@ -135,17 +139,17 @@ export function xSliceInteractor(state, plotlyPlot, d3, plot='xy') {
 
       // fire!
       if (!preventPropagation) {
-        dispatch.update();
+        dispatch.call('update', state);
       }
     }
   }
   
-  function dragmove_lines() {
-    if (d3.select(this).classed("x1")) {
-      state.x1 = x.p2c(x.c2p(state.x1) + d3.event.dx);
+  function dragmove_lines(ev) {
+    if (d3_select(this).classed("x1")) {
+      state.x1 = x.p2c(x.c2p(state.x1) + ev.dx);
     }
     else {
-      state.x2 = x.p2c(x.c2p(state.x2) + d3.event.dx);
+      state.x2 = x.p2c(x.c2p(state.x2) + ev.dx);
     }
     interactor.update();
   }

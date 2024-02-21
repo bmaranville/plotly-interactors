@@ -28,7 +28,7 @@ export function xSliceInteractor(state, plotlyPlot, plot='xy') {
   const clipId = subplot.clipId.replace(/plot$/, '');
   const shapelayer = plotlyPlot._fullLayout._shapeUpperLayer;
   // create interactor layer, if not exists:
-  const layer_above = d3_select(shapelayer[0][0].parentNode);
+  const layer_above = d3_select(shapelayer.node().parentNode);
   // create interactor layer, if not exists:
   layer_above.selectAll("g.interactorlayer")
     .data(["interactors"])
@@ -145,7 +145,7 @@ export function xSliceInteractor(state, plotlyPlot, plot='xy') {
   }
   
   function dragmove_lines(ev) {
-    if (d3_select(this).classed("x1")) {
+    if (this.classList.contains("x1")) {
       state.x1 = x.p2c(x.c2p(state.x1) + ev.dx);
     }
     else {

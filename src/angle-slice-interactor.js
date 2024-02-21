@@ -30,7 +30,7 @@ export function angleSliceInteractor(state, plotlyPlot, plot='xy') {
   // angle is in pixel coords
 
   // dispatch is the d3 event dispatcher: should have event "update" register
-  var dispatch = d3_dispatch("update");
+  const dispatch = d3_dispatch("update");
   const subplot = plotlyPlot._fullLayout._plots[plot];
   const clipId = subplot.clipId.replace(/plot$/, '');
   const shapelayer = plotlyPlot._fullLayout._shapeUpperLayer;

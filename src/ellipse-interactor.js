@@ -121,7 +121,7 @@ export function ellipseInteractor(state, plotlyPlot, plot='xy') {
     const group = selection.append("g")
       .classed("interactors interactor-" + name, true)
       .style("pointer-events", "all")
-      .style("cursor", cursor)
+
     const edges = group.append("g")
           .attr("class", "edges")
           .style("stroke", state.color1)
@@ -138,7 +138,7 @@ export function ellipseInteractor(state, plotlyPlot, plot='xy') {
           .attr("rx", function(d) {return Math.abs(x_c2p(d['rx'] + d['cx']) - x_c2p(d['cx']))})
           .attr("ry", function(d) {return Math.abs(y_c2p(d['ry'] + d['cy']) - y_c2p(d['cy']))})
           .attr("clip-path", `url('#${clipId}')`);         
-    if (!state.fixed) edges.call(drag_edge);
+    // if (!state.fixed) edges.call(drag_edge);
     
     const corners = group.append("g")
       .classed("corners", true)
@@ -147,6 +147,7 @@ export function ellipseInteractor(state, plotlyPlot, plot='xy') {
       .data(state_to_points(state))
         .enter().append("circle")
         .classed("corner", true)
+        .style("cursor", function(d, i) { return (i == 0) ? "ew-resize" : "ns-resize" })
         .attr("vertex", function(d,i) { return i.toFixed()})
         .attr("r", state.point_radius)
         .attr("cx", function(d) {return x_c2p(d[0])})
@@ -161,6 +162,7 @@ export function ellipseInteractor(state, plotlyPlot, plot='xy') {
       .data(state_to_center(state))
         .enter().append("circle")
         .classed("center", true)
+        .style("cursor", cursor)
         .attr("r", state.point_radius)
         .attr("cx", function(d) {return x_c2p(d[0])})
         .attr("cy", function(d) {return y_c2p(d[1])})
@@ -169,7 +171,7 @@ export function ellipseInteractor(state, plotlyPlot, plot='xy') {
 
     interactor.update = function(preventPropagation) {
       const cursor = (state.fixed) ? "auto" : "move";
-      group.style("cursor", cursor);
+      // group.style("cursor", cursor);
       group.selectAll('.center').data(state_to_center(state))
         .attr("cx", function(d) { return x_c2p(d[0]); })
         .attr("cy", function(d) { return y_c2p(d[1]); });

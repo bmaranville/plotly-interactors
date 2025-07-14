@@ -60,17 +60,25 @@ export function angleSliceInteractor(state, plotlyPlot, plot='xy') {
   function angle_to_path(cx, cy, angle) {
     const yd = y.range.map(y_c2p);
     const xd = x.range.map(x_c2p);
-    const rm = Math.sqrt(Math.pow(xd[1] - xd[0], 2) + Math.pow(yd[1] - yd[0], 2));        
 
-    const s = Math.sin(angle),
-        c = Math.cos(angle),
-        cxp = x_c2p(cx),
-        cyp = y_c2p(cy);
-        
-    const y1 = cyp - rm * s,
-        y2 = cyp + rm * s,
-        x1 = cxp + rm * c,
-        x2 = cxp - rm * c;
+    const s = Math.sin(angle);
+    const c = Math.cos(angle);
+    const cxp = x_c2p(cx);
+    const cyp = y_c2p(cy);
+
+    const corners = [
+      Math.pow(xd[0] - cxp, 2) + Math.pow(yd[0] - cyp, 2),
+      Math.pow(xd[1] - cxp, 2) + Math.pow(yd[0] - cyp, 2),
+      Math.pow(xd[1] - cxp, 2) + Math.pow(yd[1] - cyp, 2),
+      Math.pow(xd[0] - cxp, 2) + Math.pow(yd[1] - cyp, 2),
+    ];
+
+    const rm = Math.sqrt(Math.max(...corners));
+
+    const x1 = cxp + rm * c;
+    const y1 = cyp - rm * s;
+    const x2 = cxp - rm * c;
+    const y2 = cyp + rm * s;
         
     let pathstring = ""; 
     // start in the center and draw to the edge

@@ -3,22 +3,37 @@
   <script type="importmap">
     {
       "imports": {
-        "plotly.js": "https://cdn.jsdelivr.net/npm/plotly.js-dist@2.29.1/+esm",
+        "plotly.js": "https://cdn.jsdelivr.net/npm/plotly.js-dist@3.0.1/+esm",
         "d3-drag": "https://cdn.jsdelivr.net/npm/d3-drag@3.0.0/+esm",
         "d3-selection": "https://cdn.jsdelivr.net/npm/d3-selection@3.0.0/+esm",
         "d3-dispatch": "https://cdn.jsdelivr.net/npm/d3-dispatch@3.0.1/+esm",
-        "plotly-interactors": "https://cdn.jsdelivr.net/gh/bmaranville/plotly-interactors@latest/index.js"
+        "plotly-interactors-cdn": "https://cdn.jsdelivr.net/gh/bmaranville/plotly-interactors@latest/index.js",
+        "plotly-interactors": "./index.js"
       }
     }
   </script>
+  <style>
+    body, html {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    #plotDiv {
+      width: 100%;
+      height: 80%;
+    }
+  </style>
 </head>
 
 <body>
-  <div id="myDiv" style:width: 100%><!-- Plotly chart will be drawn inside this DIV --></div>
-  <div id="test"><button id="replot">Randomize Plot 1</button></div>
+  <div id="plotDiv" style:width: 100%><!-- Plotly chart will be drawn inside this DIV --></div>
+  <div id="test"><button id="replot">Randomize Plot 1</button></div>`
   <script type="module">
     import { angleSliceInteractor, xSliceInteractor, ellipseInteractor } from 'plotly-interactors';
     import Plotly from 'plotly.js';
+
+    const PLOTDIV = "plotDiv";
 
     const state = {
       name: "angle_slice",
@@ -32,7 +47,7 @@
     };
 
     const state2 = {
-      name: "angle_slice",
+      name: "angle_slice_2",
       cx: 35,
       cy: 53,
       mirror: false,
@@ -69,7 +84,7 @@
     }
 
 
-    const myPlot = document.getElementById('myDiv');
+    const myPlot = document.getElementById(PLOTDIV);
 
     const trace1 = {
       x: [1, 2, 3],
@@ -95,8 +110,8 @@
       yaxis: { showline: true, mirror: true },
       xaxis2: { showline: true, mirror: true },
       yaxis2: { showline: true, mirror: true },
-      dragmode: 'select',
-      selectdirection: 'h',
+      // dragmode: 'select',
+      // selectdirection: 'h',
     };
 
     const config = {
@@ -120,12 +135,14 @@
     };
     // var slice_interactor;
     // var slice_interactor2;
-    const plot = await Plotly.newPlot('myDiv', data, layout, config);
+    const plot = await Plotly.react(PLOTDIV, data, layout, config);
     const x_slice_interactor = xSliceInteractor(x_slice_state, plot, 'xy');
     const slice_interactor = angleSliceInteractor(state, plot, 'xy');
     const slice_interactor2 = angleSliceInteractor(state2, plot, 'x2y2');
     const ellipse_interactor = ellipseInteractor(ellipse_state, plot, 'x2y2');
-    slice_interactor2.dispatch.on('update', (s) => { console.log(s.cx, state2.cx) });
+    for (let interactor of [x_slice_interactor, slice_interactor, slice_interactor2, ellipse_interactor]) {
+      interactor.dispatch.on('update', (s) => { console.log(s) });
+    }
 
     const added_ranges = [];
 
@@ -150,7 +167,7 @@
       added_ranges.push(new_interactor);
     }
 
-    // const [slice_interactor, slice_interactor2] = await Plotly.plot('myDiv', data, layout, config).then((p) => {
+    // const [slice_interactor, slice_interactor2] = await Plotly.plot(PLOTDIV, data, layout, config).then((p) => {
     //   const slice_interactor = angleSliceInteractor(state, p, d3, 'xy');
     //   const slice_interactor2 = angleSliceInteractor(state2, p, d3, 'x2y2');
     //   slice_interactor2.dispatch.on('update', (s) => { console.log(s.cx) });
@@ -183,7 +200,7 @@
     const replot_button = document.getElementById("replot");
     replot_button.onclick = () => {
       data[0].y = Array.from({ length: 3 }).map(() => Math.random() * 5.0);
-      Plotly.react("myDiv", data, layout);
+      Plotly.react(PLOTDIV, data, layout);
 
     }
 

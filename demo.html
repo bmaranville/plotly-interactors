@@ -30,7 +30,7 @@
   <div id="plotDiv" style:width: 100%><!-- Plotly chart will be drawn inside this DIV --></div>
   <div id="test"><button id="replot">Randomize Plot 1</button></div>`
   <script type="module">
-    import { angleSliceInteractor, xSliceInteractor, ellipseInteractor } from 'plotly-interactors';
+    import { angleSliceInteractor, xSliceInteractor, xLineInteractor, ellipseInteractor } from 'plotly-interactors';
     import Plotly from 'plotly.js';
 
     const PLOTDIV = "plotDiv";
@@ -83,6 +83,13 @@
       ry: 7,
     }
 
+    const line_state = {
+      type: 'x-line',
+      name: 'x-line',
+      x: 23.0,
+      show_lines: true,
+      color1: 'purple',
+    }
 
     const myPlot = document.getElementById(PLOTDIV);
 
@@ -140,7 +147,8 @@
     const slice_interactor = angleSliceInteractor(state, plot, 'xy');
     const slice_interactor2 = angleSliceInteractor(state2, plot, 'x2y2');
     const ellipse_interactor = ellipseInteractor(ellipse_state, plot, 'x2y2');
-    for (let interactor of [x_slice_interactor, slice_interactor, slice_interactor2, ellipse_interactor]) {
+    const line_interactor = xLineInteractor(line_state, plot, 'x2y2');
+    for (let interactor of [x_slice_interactor, slice_interactor, slice_interactor2, ellipse_interactor, line_interactor]) {
       interactor.dispatch.on('update', (s) => { console.log(s) });
     }
 

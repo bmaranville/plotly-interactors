@@ -1,6 +1,6 @@
 import { dispatch as d3_dispatch } from 'd3-dispatch';
 import { drag as d3_drag } from 'd3-drag';
-import { getInteractorLayer } from './interactor-layer';
+import { getInteractorLayer } from './interactor-layer.js';
 
 export default ellipseInteractor;
 

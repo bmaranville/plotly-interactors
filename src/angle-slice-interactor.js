@@ -1,7 +1,7 @@
 import { dispatch as d3_dispatch } from 'd3-dispatch';
 import { select as d3_select } from 'd3-selection';
 import { drag as d3_drag } from 'd3-drag';
-import { getInteractorLayer } from './interactor-layer';
+import { getInteractorLayer } from './interactor-layer.js';
 
 export default angleSliceInteractor;
 

@@ -1,6 +1,7 @@
 import { dispatch as d3_dispatch } from 'd3-dispatch';
 import { select as d3_select } from 'd3-selection';
 import { drag as d3_drag } from 'd3-drag';
+import { getInteractorLayer } from './interactor-layer';
 
 export default angleSliceInteractor;
 
@@ -31,16 +32,8 @@ export function angleSliceInteractor(state, plotlyPlot, plot='xy') {
 
   // dispatch is the d3 event dispatcher: should have event "update" register
   const dispatch = d3_dispatch("update");
-  const subplot = plotlyPlot._fullLayout._plots[plot];
-  const clipId = subplot.clipId.replace(/plot$/, '');
-  const shapelayer = plotlyPlot._fullLayout._shapeUpperLayer;
-  const layer_above = d3_select(shapelayer.node().parentNode);
-  // create interactor layer, if not exists:
-  layer_above.selectAll("g.interactorlayer")
-    .data(["interactors"])
-    .enter().append("g")
-    .classed("interactorlayer", true);
-  const interactorlayer = layer_above.selectAll("g.interactorlayer");
+  const { interactorlayer, subplot, clipid } = getInteractorLayer(plotlyPlot, plot);
+
   let x = subplot.xaxis;
   let y = subplot.yaxis;
   function x_c2p(xc) {
@@ -165,7 +158,7 @@ export function angleSliceInteractor(state, plotlyPlot, plot='xy') {
         .attr("vector-effect", "non-scaling-stroke")
         .classed("lines", true)
         .attr("d", function(d) {return d['path']})
-        .attr("clip-path", `url('#${clipId}')`)
+        .attr("clip-path", `url('#${clipid}')`)
     if (!state.fixed) {
       lines.call(drag_lines);
       lines
@@ -182,7 +175,7 @@ export function angleSliceInteractor(state, plotlyPlot, plot='xy') {
         .attr("r", state.point_radius)
         .attr("cx", function(d) {return x_c2p(d[0])})
         .attr("cy", function(d) {return y_c2p(d[1])})
-        .attr("clip-path", `url('#${clipId}')`)
+        .attr("clip-path", `url('#${clipid}')`)
     if (!state.fixed) {
       center_group.call(drag_center);
     } 

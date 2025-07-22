@@ -1,6 +1,6 @@
 import { dispatch as d3_dispatch } from 'd3-dispatch';
-import { select as d3_select } from 'd3-selection';
 import { drag as d3_drag } from 'd3-drag';
+import { getInteractorLayer } from './interactor-layer';
 
 export default ellipseInteractor;
 
@@ -33,16 +33,8 @@ export function ellipseInteractor(state, plotlyPlot, plot='xy') {
   // state: {cx: ..., cy: ..., rx: ..., ry: ...}
   // if dragging the ellipse itself, the eccentricity (ry/rx) is preserved
   const dispatch = d3_dispatch("update", "start", "end");
-  const subplot = plotlyPlot._fullLayout._plots[plot];
-  const clipId = subplot.clipId.replace(/plot$/, '');
-  const shapelayer = plotlyPlot._fullLayout._shapeUpperLayer;
-  const layer_above = d3_select(shapelayer.node().parentNode);
-  // create interactor layer, if not exists:
-  layer_above.selectAll("g.interactorlayer")
-    .data(["interactors"])
-    .enter().append("g")
-    .classed("interactorlayer", true);
-  const interactorlayer = layer_above.selectAll("g.interactorlayer");
+  const { interactorlayer, subplot, clipid } = getInteractorLayer(plotlyPlot, plot);
+
   let x = subplot.xaxis;
   let y = subplot.yaxis;
   function x_c2p(xc) {
@@ -137,7 +129,7 @@ export function ellipseInteractor(state, plotlyPlot, plot='xy') {
           .attr("cy", function(d) {return y_c2p(d['cy'])})
           .attr("rx", function(d) {return Math.abs(x_c2p(d['rx'] + d['cx']) - x_c2p(d['cx']))})
           .attr("ry", function(d) {return Math.abs(y_c2p(d['ry'] + d['cy']) - y_c2p(d['cy']))})
-          .attr("clip-path", `url('#${clipId}')`);         
+          .attr("clip-path", `url('#${clipid}')`);         
     // if (!state.fixed) edges.call(drag_edge);
     
     const corners = group.append("g")
@@ -152,7 +144,7 @@ export function ellipseInteractor(state, plotlyPlot, plot='xy') {
         .attr("r", state.point_radius)
         .attr("cx", function(d) {return x_c2p(d[0])})
         .attr("cy", function(d) {return y_c2p(d[1])})
-        .attr("clip-path", `url('#${clipId}')`);
+        .attr("clip-path", `url('#${clipid}')`);
     if (!state.fixed) corners.call(drag_corner);
     
     const center_group = group.append("g")
@@ -166,7 +158,7 @@ export function ellipseInteractor(state, plotlyPlot, plot='xy') {
         .attr("r", state.point_radius)
         .attr("cx", function(d) {return x_c2p(d[0])})
         .attr("cy", function(d) {return y_c2p(d[1])})
-        .attr("clip-path", `url('#${clipId}')`);
+        .attr("clip-path", `url('#${clipid}')`);
     if (!state.fixed) center_group.call(drag_center);
 
     interactor.update = function(preventPropagation) {
@@ -188,7 +180,7 @@ export function ellipseInteractor(state, plotlyPlot, plot='xy') {
         
       // fire!
       if (!preventPropagation) {
-        dispatch.call("update");
+        dispatch.call("update", this, state);
       }
     }
   }

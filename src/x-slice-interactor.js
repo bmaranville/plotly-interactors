@@ -1,6 +1,6 @@
 import { dispatch as d3_dispatch } from 'd3-dispatch';
-import { select as d3_select } from 'd3-selection';
 import { drag as d3_drag } from 'd3-drag';
+import { getInteractorLayer } from './interactor-layer';
 
 export default xSliceInteractor;
 
@@ -24,17 +24,8 @@ export function xSliceInteractor(state, plotlyPlot, plot='xy') {
 
   // dispatch is the d3 event dispatcher: should have event "update" register
   const dispatch = d3_dispatch("update");
-  const subplot = plotlyPlot._fullLayout._plots[plot];
-  const clipId = subplot.clipId.replace(/plot$/, '');
-  const shapelayer = plotlyPlot._fullLayout._shapeUpperLayer;
-  // create interactor layer, if not exists:
-  const layer_above = d3_select(shapelayer.node().parentNode);
-  // create interactor layer, if not exists:
-  layer_above.selectAll("g.interactorlayer")
-    .data(["interactors"])
-    .enter().append("g")
-    .classed("interactorlayer", true);
-  const interactorlayer = layer_above.selectAll("g.interactorlayer");
+  const { interactorlayer, subplot, clipid } = getInteractorLayer(plotlyPlot, plot);
+
   let x = subplot.xaxis;
   let y = subplot.yaxis;
    
@@ -95,7 +86,7 @@ export function xSliceInteractor(state, plotlyPlot, plot='xy') {
     const fill = group.append("rect")
           .attr("class", "range-fill")
           .style("stroke", "none")
-          .attr("clip-path", `url('#${clipId}')`)
+          .attr("clip-path", `url('#${clipid}')`)
           .datum(state_to_rect(state))   
     fill
       .style("fill", state.color1)
@@ -120,7 +111,7 @@ export function xSliceInteractor(state, plotlyPlot, plot='xy') {
         .attr("vector-effect", "non-scaling-stroke")
         .classed("lines", true)
         .attr("d", function(d) {return d['path']})
-        .attr("clip-path", `url('#${clipId}')`)
+        .attr("clip-path", `url('#${clipid}')`)
         .style("cursor", get_cursor())
     if (!state.fixed) lines.call(drag_lines);
 
@@ -139,7 +130,7 @@ export function xSliceInteractor(state, plotlyPlot, plot='xy') {
 
       // fire!
       if (!preventPropagation) {
-        dispatch.call('update', state);
+        dispatch.call("update", this, state);
       }
     }
   }
